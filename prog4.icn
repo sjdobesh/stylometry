@@ -1,0 +1,147 @@
+#--------------------------------------#
+# Stylometric Analysis                 |
+# Author: Samuel Dobesh                |
+# Desc: Process a piece of text and    |
+#       produce a stats, words, and    |
+#       oddwords analysis files        |
+#--------------------------------------#--------------------------------------80
+
+# Links
+link options
+
+# VALIDATION PROCEDURE #--------------------------------------------------------
+procedure validate(arguments)
+  usage := "Argument Error\nUsage:\n./prog4 [-d dictionary] [-f file]"
+
+  # check number of arguments
+  if *arguments != 4 then {
+    write(usage)
+    fail
+  }
+
+  # using options.icn parser
+  opt_table := options(arguments,"d:f:")
+
+  return \opt_table
+
+end
+
+# NAME EXTRACTION PROCEDURE #---------------------------------------------------
+procedure extract_name(file_path)
+  # get the portion of string after the last "/"
+  file_path ? {
+    while tab(upto("/")) do
+      tab(many("/"))
+    # remove ".txt"
+    return (tab(find(".")))
+  }
+end
+
+# SENTENCE GEN PROCEDURE #------------------------------------------------------
+procedure get_sentences(str)
+  str ? {
+    while tab(upto(".")) do {
+      sentence := tab(many("."))
+      suspend sentence
+    }
+  }
+end
+# WORD GEN PROCEDURES #----------------------------------------------------------
+procedure get_words(str)
+  str ? {
+    while tab(upto(&letters || '.-"\'')) do {
+      word := tab(many(&letters || '.-"\''))
+      suspend word
+    }
+    word := move(1)
+    suspend word
+  }
+end
+
+# WORD COUNT PROCEDURES #-------------------------------------------------------
+procedure count_words(str)
+  count := table(0)
+  str ? {
+    while tab(upto(&letters)) do
+      count[tab(many(&letters))]+:=1
+  }
+  return count
+end
+
+procedure global_count(input)
+  count := table(0)
+  while line := read(input) do {
+    line ? {
+      while tab(upto(&letters)) do
+        count[tab(many(&letters))]+:=1
+    }
+  }
+  return count
+end
+
+
+# MAIN #------------------------------------------------------------------------
+procedure main(args)
+
+  # read args
+  arg_table := validate(args) | exit(-1)
+
+  # open files to read in data
+  dict   := open(\arg_table["d"]) | stop("Couldn't open dictionary")
+  intext := open(\arg_table["f"]) | stop("Couldn't open file")
+
+  # extract name for output files
+  x := extract_name(arg_table["f"])
+  write("Extracted name : ", x)
+  # concatenate new file names
+  xs_name := x || "-stats.txt"
+  xw_name := x || "-words.txt"
+  xo_name := x || "-oddwords.txt"
+
+  # open output files for writing
+  x_stats := open(xs_name, "w") | stop("Error opening file")
+  x_words := open(xw_name, "w") | stop("Error opening file")
+  x_odd   := open(xo_name, "w") | stop("Error opening file")
+
+  # read in text to analyze
+
+# Global unique word count
+# words  := global_count(intext)
+# words  := sort(words, 4)
+# unique := *words / 2
+# every 1 to *words do write(x_words, pull(words), " : ", pull(words))
+# write(unique, " unique words found.")
+
+
+#  # get sentences in input
+#  words := table(0)
+#  while (line := read(intext)) do {
+#    every words[get_words(line)] +:= 1
+#    words := sort(words, 4) # <=== This is sorting by key val
+#    every 1 to 4 do write(pull(words), "\n", pull(words))
+#  }
+
+
+  w_count := 0
+  l_count := 0
+  while (line := read(intext)) do {
+    # for each line, break into words
+    line ? {
+      # first word
+      write(get_words(tab(0)))
+      tab(1)
+      # every other word
+      every tab(upto(' ')) do {
+        write(get_words(tab(upto(' '))))
+        w_count +:= 1
+      }
+      # collect last word in the line
+      tab(0)
+      write(getword(find(' ')))
+      w_count +:= 1
+    }
+    l_count +:= 1
+  }
+  write("Line Count = ", l_count)
+  write("Word Count = ", w_count)
+end
