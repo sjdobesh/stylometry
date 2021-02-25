@@ -8,22 +8,19 @@
 
 # Links
 link options
+link lists
 
 # VALIDATION PROCEDURE #--------------------------------------------------------
 procedure validate(arguments)
   usage := "Argument Error\nUsage:\n./prog4 [-d dictionary] [-f file]"
-
   # check number of arguments
   if *arguments != 4 then {
     write(usage)
     fail
   }
-
   # using options.icn parser
   opt_table := options(arguments,"d:f:")
-
   return \opt_table
-
 end
 
 # NAME EXTRACTION PROCEDURE #---------------------------------------------------
@@ -46,29 +43,39 @@ procedure get_sentences(str)
     }
   }
 end
+
 # WORD GEN PROCEDURES #----------------------------------------------------------
-procedure get_words(str)
+procedure gen_words(str)
   str ? {
     while tab(upto(&letters || '.-"\'')) do {
       word := tab(many(&letters || '.-"\''))
       suspend word
     }
-    word := move(1)
-    suspend word
   }
 end
 
-# WORD COUNT PROCEDURES #-------------------------------------------------------
-procedure count_words(str)
-  count := table(0)
+# TABLE GENERATORS ROCEDURES #---------------------------------------------------
+procedure get_words(str)
+  words := table(0)
   str ? {
     while tab(upto(&letters)) do
-      count[tab(many(&letters))]+:=1
+      words[tab(many(&letters))]+:=1
+  }
+  return words
+end
+
+procedure file_sentences(input)
+  count := table(0)
+  while line := read(input) do {
+    line ? {
+      while tab(upto(" ")) do
+        count[tab(many(" "))]+:=1
+    }
   }
   return count
 end
 
-procedure global_count(input)
+procedure file_words(input)
   count := table(0)
   while line := read(input) do {
     line ? {
@@ -105,43 +112,85 @@ procedure main(args)
 
   # read in text to analyze
 
-# Global unique word count
-# words  := global_count(intext)
-# words  := sort(words, 4)
-# unique := *words / 2
-# every 1 to *words do write(x_words, pull(words), " : ", pull(words))
-# write(unique, " unique words found.")
+  # global sentence word count
+  words  := file_words(intext)
+  words  := lreverse(sort(words, 3))
+  unique := *words / 2
+  every 1 to *words do write(pull(words), "\t: ", pull(words))
+  write(unique, " unique words found.")
 
 
-#  # get sentences in input
+
+
+
+# NOTES
+
+
+#  # sort by frequency (greatest to least)
+#  intext := open(\arg_table["f"]) | stop("Couldn't open file")
+#  words  := file_sentences(intext)
+#  words  := sort(words, 4)
+#  every 1 to *words do write(pull(words), "\t: ", pull(words))
+
+
+
+  # This was work started on extracting words into outer loop and
+  # concatenating the results
+
+  #words := table(0)
+  #while line := read(intext) do {
+  #  word := get_words(line)
+  #  if member(words, word) then words[word] +:= 1 else insert(words, word, 1)
+  #}
+  #unique := *words / 2
+  #words  := sort(words, 4)
+  #every 1 to *words do write(pull(words), "\t: ", pull(words))
+  #write(unique, " unique words found.")
+
+  # global unique word count
+  #words  := file_count(intext)
+  #words  := lreverse(sort(words, 3))
+  #unique := *words / 2
+  #every 1 to *words do write(pull(words), "\t: ", pull(words))
+  #write(unique, " unique words found.")
+
+  ## sort by frequency (greatest to least)
+  #intext := open(\arg_table["f"]) | stop("Couldn't open file")
+  #words  := file_count(intext)
+  #words  := sort(words, 4)
+  #every 1 to *words do write(pull(words), "\t: ", pull(words))
+
 #  words := table(0)
 #  while (line := read(intext)) do {
 #    every words[get_words(line)] +:= 1
-#    words := sort(words, 4) # <=== This is sorting by key val
-#    every 1 to 4 do write(pull(words), "\n", pull(words))
+#    words := sort(words, 3) # <=== This is sorting by key val
+#    size := *words / 2;
+#    every 1 to size do {
+#      pull(words)
+#      write(pull(words))
+#    }
 #  }
 
 
-  w_count := 0
-  l_count := 0
-  while (line := read(intext)) do {
-    # for each line, break into words
-    line ? {
-      # first word
-      write(get_words(tab(0)))
-      tab(1)
-      # every other word
-      every tab(upto(' ')) do {
-        write(get_words(tab(upto(' '))))
-        w_count +:= 1
-      }
-      # collect last word in the line
-      tab(0)
-      write(getword(find(' ')))
-      w_count +:= 1
-    }
-    l_count +:= 1
-  }
-  write("Line Count = ", l_count)
-  write("Word Count = ", w_count)
+#  w_count := 0
+#  l_count := 0
+#  while (line := read(intext)) do {
+#    # for each line, break into words
+#    line ? {
+#      # first word
+#      write(get_words(tab(0)))
+#      tab(1)
+#      # every other word
+#      every tab(upto(' ')) do {
+#        write(get_words(tab(upto(' '))))
+#        w_count +:= 1
+#      }
+#      # collect last word in the line
+#      write(get_words(tab(upto(' '))))
+#      w_count +:= 1
+#    }
+#    l_count +:= 1
+#  }
+#  write("Line Count = ", l_count)
+#  write("Word Count = ", w_count)
 end
