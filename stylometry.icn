@@ -34,6 +34,21 @@ procedure extract_name(file_path)
   }
 end
 
+
+# PARAGRAPH GEN PROCEDURE #-----------------------------------------------------
+procedure get_paragraphs(input)
+  pargraphs := list(0)
+  while read(input) := line do {
+    line ? {
+      while tab(upto(" ")) do {
+        paragraphs := tab(many(" "))
+        paragraphs |||:= list(paragraphs)
+      }
+    }
+  }
+  return paragraphs
+end
+
 # SENTENCE GEN PROCEDURE #------------------------------------------------------
 procedure get_sentences(str)
   str ? {
@@ -75,7 +90,7 @@ procedure file_sentences(input)
   return count
 end
 
-procedure file_words(input)
+procedure words_table(input)
   count := table(0)
   while line := read(input) do {
     line ? {
@@ -86,6 +101,50 @@ procedure file_words(input)
   return count
 end
 
+procedure words_list(input)
+  count := list(0)
+  while line := read(input) do {
+    line ? {
+      while tab(upto(&letters)) do
+        put(count, (tab(many(&letters))))
+    }
+  }
+  return lreverse(count)
+end
+
+# make a list of each paragraph
+procedure paragraphs_list(input)
+
+  # vars
+  paragraphs := list(0) # (p)aragraph list to accumulate
+  p          := ""      # string to accumulate each p into
+  on_p       := 0       # flag for whether the current scan is part of a p
+  last       := 0       # weather the last scan was part of a p
+
+  # read in each line
+  while line := read(input) do {
+    # flag tells us wether this is a paragraph or not
+    if *line == 0 then on_p := 0 else on_p := 1
+    # accumulate
+    if on_p = 1 then {
+      p ||:= (line ||:= ' ')
+    }
+    # add entry to the paragraph list
+    else if on_p = 0 & last = 1 then {
+      put(paragraphs, p)
+      p := ""
+    }
+    # keep track of last scan
+    last := on_p
+  }
+
+  # check if we exited loop on a paragraph
+  if on_p = 1 then {
+    put(paragraphs, p)
+  }
+  # reverse before returning
+  return lreverse(paragraphs)
+end
 
 # MAIN #------------------------------------------------------------------------
 procedure main(args)
@@ -120,6 +179,16 @@ procedure main(args)
   #                # of phrases, avg length in words, chars
 
   # generate paragraphs (one or more blank lines)
+  paragraphs := paragraphs_list(intext)
+  # check paragraph contents
+  # every i := 1 to *paragraphs do write("p", i, ":\n", pull(paragraphs))
+
+  # CALC XSTATS #-------------------------------------------
+  # WRITE TO XSTATS #---------------------------------------
+  writes("paragraphs\t", *paragraphs)
+  writes("\taverage length\t")
+  if sntc_len == 1 then unit := "sentence" else unit := "sentences"
+  writes(sntc_len, " ", unit, "\t")
 
   # generate sentences (!?.)
 
@@ -132,12 +201,12 @@ procedure main(args)
 
 
 
-  # global sentence word count
-  words  := file_words(intext)
-  words  := lreverse(sort(words, 3))
-  unique := *words / 2
-  every 1 to *words do write(pull(words), "\t: ", pull(words))
-  write(unique, " unique words found.")
+  # # global sentence word count
+  # words  := file_words(intext)
+  # words  := lreverse(sort(words, 3))
+  # unique := *words / 2
+  # every 1 to *words do write(pull(words), "\t: ", pull(words))
+  # write(unique, " unique words found.")
 
 
 
