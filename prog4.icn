@@ -112,6 +112,26 @@ procedure main(args)
 
   # read in text to analyze
 
+  # data needed:
+  #     words :    word frequencies sorted by frequency and lexical order
+  #     oddwords : collect any word not present in a dictionary
+  #     stats :    # of paragraphs, avg length in sentences, words, chars
+  #                # of sentences, avg length in phrases words, chars
+  #                # of phrases, avg length in words, chars
+
+  # generate paragraphs (one or more blank lines)
+
+  # generate sentences (!?.)
+
+  # generate phrases (!,.?;:)
+
+  # generate words (space)
+
+  # end
+
+
+
+
   # global sentence word count
   words  := file_words(intext)
   words  := lreverse(sort(words, 3))
