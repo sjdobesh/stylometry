@@ -1,10 +1,10 @@
-#--------------------------------------#
-# Stylometric Analysis                 |
-# Author: Samuel Dobesh                |
-# Desc: Process a piece of text and    |
-#       produce a stats, words, and    |
-#       oddwords analysis files        |
-#--------------------------------------#--------------------------------------80
+#------------------------------------#
+# Stylometric Analysis               |
+# Author: Samuel Dobesh              |
+# Desc: Process a piece of text and  |
+#       produce a stats, words, and  |
+#       oddwords analysis files      |
+#------------------------------------#----------------------------------------80
 
 # Links
 link options
@@ -123,6 +123,19 @@ procedure word_list(input)
   return words
 end
 
+# CHARS #---------------------------------------------------
+# delimiters = none
+procedure char_scan(input)
+  count := 0
+  input ? {
+    while move(1) do
+      count +:= 1
+  }
+  # overshot
+  count -:= 1
+  return count
+end
+
 # MAIN #------------------------------------------------------------------------
 procedure main(args)
 
@@ -151,19 +164,15 @@ procedure main(args)
 
   # read in text to analyze
 
-  # data needed:
-  #   words    : word frequencies sorted by frequency and lexical order
-  #   oddwords : collect any word not present in a dictionary
-  #   stats    : # of paragraphs, avg length in sentences, words, chars
-  #              # of sentences, avg length in phrases words, chars
-  #              # of phrases, avg length in words, chars
-
   # data to collect
-  num_P      := 0        # Paragraphs
-  num_s      := 0        # sentences
-  num_p      := 0        # phrases
-  num_w      := 0        # words
-  num_c      := 0        # chars
+  num_P      := 0      # Paragraphs
+  num_s      := 0      # sentences
+  num_p      := 0      # phrases
+  num_w      := 0      # words
+  P_num_c    := 0.0      # chars in Paragraphs
+  s_num_c    := 0.0      # chars in sentences
+  p_num_c    := 0.0      # chars in phrases
+  w_num_c    := 0.0      # chars in phrases
   odd        := set()    # odd words
   word_table := table(0) # word_table
 
@@ -172,23 +181,26 @@ procedure main(args)
   num_P := *paragraphs
   root := list(0)
   every i := 1 to *paragraphs do {
+    P_num_c +:= *paragraphs[i]
     sentences := sentence_list(paragraphs[i])
     s_layer := list(0)
     every j := 1 to *sentences do {
       num_s +:= 1
+      s_num_c +:= *sentences[j] + 1
       phrases := phrase_list(sentences[j])
       p_layer := list(0)
       every k := 1 to *phrases do {
         num_p +:= 1
+        p_num_c +:= *phrases[k]
         words := word_list(phrases[k])
         every l := 1 to *words do {
           num_w +:= 1
-          num_c +:= *words[l]
+          w_num_c +:= *words[l]
           word_table[words[l]]+:= 1
           if not member(dict, map(words[l], &ucase, &lcase)) then
             insert(odd, words[l])
           # write output for check
-          write(words[l])
+          # write(words[l])
         }
         put(p_layer, words)
       }
@@ -196,18 +208,45 @@ procedure main(args)
     }
     put(root, s_layer)
   }
+  P_num_c -:= 1
   # at this point root contains the whole tree
-  odd := sort(odd)
+
+  # sort words for frequency and oddwords
+  odd       := sort(odd, 3)
+  odd_chars := 0
+  every i := 1 to *odd do
+    odd_chars +:= *odd[i]
+  if *odd != 0 then odd_chars := odd_chars/*odd
+  word_freq := lreverse(sort(word_table, 4))
 
   # print data
-  write("\n\n\nData Collected:\n")
-  write("Num Paragraphs : ", num_P)
-  write("Num sentences : ", num_s)
-  write("Num phrases : ", num_p)
-  write("Num words : ", num_w)
-  write("Num chars : ", num_c)
-  write("Odd words : ")
+  # data needed:
+  #   words    : word frequencies sorted by frequency and lexical order
+  #   oddwords : collect any word not present in a dictionary
+  #   stats    : # of paragraphs, avg length in sentences, words, chars
+  #              # of sentences, avg length in phrases words, chars
+  #              # of phrases, avg length in words, chars
+
+  write ("\n\n\nData Collected:\n")
+  writes("paragraphs : ", num_P)
+  writes(" sentence : ", num_s/num_P)
+  writes(" words : ", num_w/num_P)
+  write (" chars : ", P_num_c)
+  writes("sentences : ", num_s)
+  writes(" phrases : ", num_p/num_s)
+  writes(" words : ", num_w/num_s)
+  write (" chars : ", s_num_c/num_s)
+  writes("phrases : ", num_p)
+  writes(" words : ", num_w/num_p)
+  write (" chars : ", p_num_c/num_p)
+  writes("words : ", num_w)
+  write (" chars : ", w_num_c/num_w)
+  writes("oddwords : ", *odd)
+  write (" chars : ", odd_chars)
   every i := 1 to *odd do
     write(odd[i])
-
+  #write("\nWord frequency : ")
+  #every i := 1 to *word_freq do
+  #  write(word_freq[i])
+  write("Unique words : ", *word_freq/2)
 end
