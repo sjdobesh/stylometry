@@ -1,14 +1,14 @@
 
-2 Oh yeah this one starts with blanks.
+Oh yeah this one starts with blanks.
 
 
-  5  This line starts with spaces.
+  This line starts with spaces.
 
-7 The quick brown fox, jumps over the lazy dog.
-8 Another sick line. This one is two sentences.
+The quick brown fox, jumps over the lazy dog.
+Another sick line. This one is two sentences.
 
-10 This is actually a seperate paragraph though,
-11 with a sentence split across two lines.
+This is actually a seperate paragraph though,
+with a sentence split across two lines.
 
 
 

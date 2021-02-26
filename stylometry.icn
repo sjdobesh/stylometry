@@ -35,20 +35,6 @@ procedure extract_name(file_path)
 end
 
 
-# PARAGRAPH GEN PROCEDURE #-----------------------------------------------------
-procedure get_paragraphs(input)
-  pargraphs := list(0)
-  while read(input) := line do {
-    line ? {
-      while tab(upto(" ")) do {
-        paragraphs := tab(many(" "))
-        paragraphs |||:= list(paragraphs)
-      }
-    }
-  }
-  return paragraphs
-end
-
 # SENTENCE GEN PROCEDURE #------------------------------------------------------
 procedure get_sentences(str)
   str ? {
@@ -146,6 +132,30 @@ procedure paragraphs_list(input)
   return lreverse(paragraphs)
 end
 
+
+# make a list of each sentence
+procedure sentence_list(input)
+  sentence := list(0)
+  input ? {
+    while tab(upto(&letters)) do {
+      put(sentence, tab(many(',:; '++&letters)))
+    }
+  }
+  return sentence
+end
+
+
+# make a list of each word
+procedure word_list(input)
+  words := list(0)
+  input ? {
+    while tab(upto(&letters)) do {
+      put(words, tab(many(&letters)))
+    }
+  }
+  return words
+end
+
 # MAIN #------------------------------------------------------------------------
 procedure main(args)
 
@@ -181,14 +191,33 @@ procedure main(args)
   # generate paragraphs (one or more blank lines)
   paragraphs := paragraphs_list(intext)
   # check paragraph contents
-  # every i := 1 to *paragraphs do write("p", i, ":\n", pull(paragraphs))
+  every i := 1 to *paragraphs do write("p ", i, "\n", paragraphs[i])
+  write("\n\n")
+
+  # generate sentences
+  sentence_tree := list(0)
+  every i := 1 to *paragraphs do {
+    s_list := sentence_list(paragraphs[i])
+    put(sentence_tree, s_list)
+  }
+
+  every i := 1 to *sentence_tree do {
+    write("P ", i)
+    every j := 1 to *sentence_tree[i] do {
+      write("S ", j)
+      write(sentence_tree[i][j])
+    }
+  }
+  # generate phrases
+
+  # generate words
 
   # CALC XSTATS #-------------------------------------------
   # WRITE TO XSTATS #---------------------------------------
-  writes("paragraphs\t", *paragraphs)
-  writes("\taverage length\t")
-  if sntc_len == 1 then unit := "sentence" else unit := "sentences"
-  writes(sntc_len, " ", unit, "\t")
+  #writes("paragraphs\t", *paragraphs)
+  #writes("\taverage length\t")
+  #if sntc_len == 1 then unit := "sentence" else unit := "sentences"
+  #writes(sntc_len, " ", unit, "\t")
 
   # generate sentences (!?.)
 
