@@ -137,17 +137,19 @@ procedure main(args)
   # read in text to analyze
 
   # data needed:
-  #     words :    word frequencies sorted by frequency and lexical order
-  #     oddwords : collect any word not present in a dictionary
-  #     stats :    # of paragraphs, avg length in sentences, words, chars
-  #                # of sentences, avg length in phrases words, chars
-  #                # of phrases, avg length in words, chars
+  #   words    : word frequencies sorted by frequency and lexical order
+  #   oddwords : collect any word not present in a dictionary
+  #   stats    : # of paragraphs, avg length in sentences, words, chars
+  #              # of sentences, avg length in phrases words, chars
+  #              # of phrases, avg length in words, chars
 
   # data to collect
-  num_P := 0 # <= Paragraphs
-  num_s := 0 # <= sentences
-  num_p := 0 # <= phrases
-  num_w := 0 # <= words
+  num_P      := 0        # <= Paragraphs
+  num_s      := 0        # <= sentences
+  num_p      := 0        # <= phrases
+  num_w      := 0        # <= words
+  odd        := set()   # <= odd words
+  word_table := table(0) # <= word_table
 
   # parse tree
   paragraphs := paragraphs_list(intext)
