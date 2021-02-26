@@ -123,20 +123,20 @@ procedure word_list(input)
   return words
 end
 
-# ALPHABET SORT #---------------------------------------------------------------
-# handles non lexical ordered alphabet sort
-procedure alpha_sort(freq_list)
+# SUB SORT #--------------------------------------------------------------------
+# handles non lexical ordered alphabet sort of equal frequencies
+procedure sub_sort(sub_list)
   # first sort lexically
-  freq_list := sort(freq_list)
+  sub_list := sort(sub_list)
 
   # now seperate upper from lower case
   upper := list(0)
   lower := list(0)
-  every i := 1 to *freq_list do {
-    if freq_list[i] ? tab(any(&ucase)) then
-      put(upper, freq_list[i])
+  every i := 1 to *sub_list do {
+    if sub_list[i] ? tab(any(&ucase)) then
+      put(upper, sub_list[i])
     else
-      put(lower, freq_list[i])
+      put(lower, sub_list[i])
   }
 
   # zip the list back together
@@ -163,6 +163,35 @@ procedure alpha_sort(freq_list)
       put(out_list, lower[i])
 
   return out_list
+end
+
+# ALPHA SORT #------------------------------------------------------------------
+# handles non lexical ordered alphabet sort of equal frequencies
+procedure alpha_sort(word_freq)
+  sub_list := list(0)
+  sorted_words := list(0)
+  every i := 1 to *word_freq do {
+    if *sub_list = 0 then {
+      put(sub_list, (word_freq[i][1] || " " || word_freq[i][2]))
+    }
+    else if *sub_list > 0 & word_freq[i][2] == word_freq[i-1][2] then {
+      put(sub_list, (word_freq[i][1] || " " || word_freq[i][2]))
+    }
+    else {
+      sub_list := sub_sort(sub_list)
+      every j := 1 to *sub_list do {
+        put(sorted_words, sub_list[j])
+        sub_list := list(0)
+      }
+    }
+  }
+  if (*sub_list > 0) then {
+    sub_list := sub_sort(sub_list)
+    every j := 1 to *sub_list do {
+      put(sorted_words, sub_list[j])
+    }
+  }
+   return sorted_words
 end
 
 # MAIN #------------------------------------------------------------------------
@@ -287,29 +316,7 @@ procedure main(args)
   write("Unique words : ", *word_freq)
 
   # subsort lexically
-  sub_list := list(0)
-  sorted_words := list(0)
-  every i := 1 to *word_freq do {
-    if *sub_list = 0 then {
-      put(sub_list, (word_freq[i][1] || " " || word_freq[i][2]))
-    }
-    else if *sub_list > 0 & word_freq[i][2] == word_freq[i-1][2] then {
-      put(sub_list, (word_freq[i][1] || " " || word_freq[i][2]))
-    }
-    else {
-      sub_list := alpha_sort(sub_list)
-      every j := 1 to *sub_list do {
-        put(sorted_words, sub_list[j])
-        sub_list := list(0)
-      }
-    }
-  }
-  if (*sub_list > 0) then {
-    sub_list := alpha_sort(sub_list)
-    every j := 1 to *sub_list do {
-      put(sorted_words, sub_list[j])
-    }
-  }
+  sorted_words := alpha_sort(word_freq)
 
   every i := 1 to *sorted_words do
     write(sorted_words[i])
