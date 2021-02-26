@@ -109,7 +109,7 @@ procedure phrase_list(input)
   return sentence
 end
 
-# make a list of each word
+# WORDS #---------------------------------------------------
 procedure word_list(input)
   words := list(0)
   input ? {
@@ -179,23 +179,27 @@ procedure main(args)
         every l := 1 to *words do {
           num_w +:= 1
           word_table[words[l]]+:= 1
-          if not member(dict, words[l]) then
+          if not member(dict, map(words[l], &ucase, &lcase)) then
             insert(odd, words[l])
           # write output for check
           write(words[l])
         }
-        put (p_layer, words)
+        put(p_layer, words)
       }
-      put (s_layer, p_layer)
+      put(s_layer, p_layer)
     }
-    put (root, s_layer)
+    put(root, s_layer)
   }
   # at this point root contains the whole tree
+  odd := sort(odd)
 
   # print data
   write("Num Paragraphs : ", num_P)
   write("Num sentences : ", num_s)
   write("Num phrases : ", num_p)
   write("Num words : ", num_w)
+  write("Odd words : ")
+  every i := 1 to *odd do
+    write(odd[i])
 
 end
