@@ -149,36 +149,31 @@ procedure main(args)
   num_p := 0 # <= phrases
   num_w := 0 # <= words
 
-  # generate paragraphs
+  # parse tree
   paragraphs := paragraphs_list(intext)
   num_P := *paragraphs
-  # generate sentences
-  sentence_tree := list(0)
+  root := list(0)
   every i := 1 to *paragraphs do {
-    s_list := sentence_list(paragraphs[i])
-    put(sentence_tree, s_list)
-  }
-  sentence_tree := lreverse(sentence_tree)
-  num_s := *sentence_tree
-
-  # generate phrases
-  every i := 1 to *sentence_tree do {
-    write("P ", i)
-    every j := 1 to *sentence_tree[i] do {
-      write("S ", j)
-      phrases := phrase_list(sentence_tree[i][j])
+    sentences := sentence_list(paragraphs[i])
+    s_layer := list(0)
+    every j := 1 to *sentences do {
+      num_s +:= 1
+      phrases := phrase_list(sentences[j])
+      p_layer := list(0)
       every k := 1 to *phrases do {
-        write("p ", j)
         num_p +:= 1
         words := word_list(phrases[k])
         every l := 1 to *words do {
-          write("w ", l)
-          write(words[l])
           num_w +:= 1
+          write(words[l])
         }
+        put (p_layer, words)
       }
+      put (s_layer, p_layer)
     }
+    put (root, s_layer)
   }
+  # at this point root contains the whole tree
 
   # print data
   write("Num Paragraphs : ", num_P)
@@ -187,6 +182,45 @@ procedure main(args)
   write("Num words : ", num_w)
 
 
+end
+
+#  # generate paragraphs
+#  paragraphs := paragraphs_list(intext)
+#  num_P := *paragraphs
+#  # generate sentences
+#  sentence_tree := list(0)
+#  every i := 1 to *paragraphs do {
+#    s_list := sentence_list(paragraphs[i])
+#    put(sentence_tree, s_list)
+#  }
+#  sentence_tree := lreverse(sentence_tree)
+#  num_s := *sentence_tree
+#
+#  # generate phrases
+#  every i := 1 to *sentence_tree do {
+#    write("P ", i)
+#    every j := 1 to *sentence_tree[i] do {
+#      write("S ", j)
+#      phrases := phrase_list(sentence_tree[i][j])
+#      every k := 1 to *phrases do {
+#        write("p ", j)
+#        num_p +:= 1
+#        words := word_list(phrases[k])
+#        every l := 1 to *words do {
+#          write("w ", l)
+#          write(words[l])
+#          num_w +:= 1
+#        }
+#      }
+#    }
+#  }
+#
+#
+
+  # root now contains all paragraph nodes
+  # each contains sentence nodes
+  # which contain phrase nodes
+  # which contain word nodes
 
   # generate paragraphs (one or more blank lines)
   # paragraphs := paragraphs_list(intext)
@@ -320,4 +354,3 @@ procedure main(args)
 #  }
 #  write("Line Count = ", l_count)
 #  write("Word Count = ", w_count)
-end
