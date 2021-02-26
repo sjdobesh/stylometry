@@ -118,8 +118,8 @@ procedure main(args)
   arg_table := validate(args) | exit(-1)
 
   # open files to read in data
-  dict   := open(\arg_table["d"]) | stop("Couldn't open dictionary")
-  intext := open(\arg_table["f"]) | stop("Couldn't open file")
+  dict    := open(\arg_table["d"]) | stop("Couldn't open dictionary")
+  intext  := open(\arg_table["f"]) | stop("Couldn't open file")
 
   # extract name for output files
   x := extract_name(arg_table["f"])
@@ -148,7 +148,7 @@ procedure main(args)
   num_s      := 0        # <= sentences
   num_p      := 0        # <= phrases
   num_w      := 0        # <= words
-  odd        := set()   # <= odd words
+  odd        := set()    # <= odd words
   word_table := table(0) # <= word_table
 
   # parse tree
@@ -183,176 +183,4 @@ procedure main(args)
   write("Num phrases : ", num_p)
   write("Num words : ", num_w)
 
-
 end
-
-#  # generate paragraphs
-#  paragraphs := paragraphs_list(intext)
-#  num_P := *paragraphs
-#  # generate sentences
-#  sentence_tree := list(0)
-#  every i := 1 to *paragraphs do {
-#    s_list := sentence_list(paragraphs[i])
-#    put(sentence_tree, s_list)
-#  }
-#  sentence_tree := lreverse(sentence_tree)
-#  num_s := *sentence_tree
-#
-#  # generate phrases
-#  every i := 1 to *sentence_tree do {
-#    write("P ", i)
-#    every j := 1 to *sentence_tree[i] do {
-#      write("S ", j)
-#      phrases := phrase_list(sentence_tree[i][j])
-#      every k := 1 to *phrases do {
-#        write("p ", j)
-#        num_p +:= 1
-#        words := word_list(phrases[k])
-#        every l := 1 to *words do {
-#          write("w ", l)
-#          write(words[l])
-#          num_w +:= 1
-#        }
-#      }
-#    }
-#  }
-#
-#
-
-  # root now contains all paragraph nodes
-  # each contains sentence nodes
-  # which contain phrase nodes
-  # which contain word nodes
-
-  # generate paragraphs (one or more blank lines)
-  # paragraphs := paragraphs_list(intext)
-  # check paragraph contents
-  # every i := 1 to *paragraphs do write("p ", i, "\n", paragraphs[i])
-  # write("\n\n")
-
-  # generate sentences
-  #sentence_tree := list(0)
-  #every i := 1 to *paragraphs do {
-  #  s_list := sentence_list(paragraphs[i])
-  #  put(sentence_tree, s_list)
-  #}
-  #sentence_tree := lreverse(sentence_tree)
-
-  #every i := 1 to *sentence_tree do {
-  #  write("P ", i)
-  #  every j := 1 to *sentence_tree[i] do {
-  #    write("S ", j)
-  #    phrases := phrase_list(sentence_tree[i][j])
-  #    every k := 1 to *phrases do {
-  #      write("p ", j)
-  #      words := word_list(phrases[k])
-  #      every l := 1 to *words do {
-  #        write("w ", l)
-  #        write(words[l])
-  #      }
-  #    }
-  #  }
-  #}
-  # generate phrases
-
-  # generate words
-
-  # CALC XSTATS #-------------------------------------------
-  # WRITE TO XSTATS #---------------------------------------
-  #writes("paragraphs\t", *paragraphs)
-  #writes("\taverage length\t")
-  #if sntc_len == 1 then unit := "sentence" else unit := "sentences"
-  #writes(sntc_len, " ", unit, "\t")
-
-  # generate sentences (!?.)
-
-  # generate phrases (!,.?;:)
-
-  # generate words (space)
-
-  # end
-
-
-
-
-  # # global sentence word count
-  # words  := file_words(intext)
-  # words  := lreverse(sort(words, 3))
-  # unique := *words / 2
-  # every 1 to *words do write(pull(words), "\t: ", pull(words))
-  # write(unique, " unique words found.")
-
-
-
-
-
-# NOTES
-
-
-#  # sort by frequency (greatest to least)
-#  intext := open(\arg_table["f"]) | stop("Couldn't open file")
-#  words  := file_sentences(intext)
-#  words  := sort(words, 4)
-#  every 1 to *words do write(pull(words), "\t: ", pull(words))
-
-
-
-  # This was work started on extracting words into outer loop and
-  # concatenating the results
-
-  #words := table(0)
-  #while line := read(intext) do {
-  #  word := get_words(line)
-  #  if member(words, word) then words[word] +:= 1 else insert(words, word, 1)
-  #}
-  #unique := *words / 2
-  #words  := sort(words, 4)
-  #every 1 to *words do write(pull(words), "\t: ", pull(words))
-  #write(unique, " unique words found.")
-
-  # global unique word count
-  #words  := file_count(intext)
-  #words  := lreverse(sort(words, 3))
-  #unique := *words / 2
-  #every 1 to *words do write(pull(words), "\t: ", pull(words))
-  #write(unique, " unique words found.")
-
-  ## sort by frequency (greatest to least)
-  #intext := open(\arg_table["f"]) | stop("Couldn't open file")
-  #words  := file_count(intext)
-  #words  := sort(words, 4)
-  #every 1 to *words do write(pull(words), "\t: ", pull(words))
-
-#  words := table(0)
-#  while (line := read(intext)) do {
-#    every words[get_words(line)] +:= 1
-#    words := sort(words, 3) # <=== This is sorting by key val
-#    size := *words / 2;
-#    every 1 to size do {
-#      pull(words)
-#      write(pull(words))
-#    }
-#  }
-
-
-#  w_count := 0
-#  l_count := 0
-#  while (line := read(intext)) do {
-#    # for each line, break into words
-#    line ? {
-#      # first word
-#      write(get_words(tab(0)))
-#      tab(1)
-#      # every other word
-#      every tab(upto(' ')) do {
-#        write(get_words(tab(upto(' '))))
-#        w_count +:= 1
-#      }
-#      # collect last word in the line
-#      write(get_words(tab(upto(' '))))
-#      w_count +:= 1
-#    }
-#    l_count +:= 1
-#  }
-#  write("Line Count = ", l_count)
-#  write("Word Count = ", w_count)
