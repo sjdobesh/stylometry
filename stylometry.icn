@@ -130,33 +130,22 @@ procedure alpha_sort(word_freq)
   sorted_words := list(0)
   # collects sublists of equal frequency
   every i := 1 to *word_freq do {
-    write("i=", i)
-    write("Current sub :")
-    every j := 1 to *sub_list do
-      write(sub_list[j])
-
-    if *sub_list = 0 then {
+    if *sub_list = 0 then
       put(sub_list, (word_freq[i][1] || " " || word_freq[i][2]))
-    }
-    else if *sub_list > 0 & word_freq[i][2] == word_freq[i-1][2] then {
+    else if *sub_list > 0 & word_freq[i][2] == word_freq[i-1][2] then
       put(sub_list, (word_freq[i][1] || " " || word_freq[i][2]))
-    }
     else {
       sub_list := sort(sub_list)
-      every j := 1 to *sub_list do {
-        write("Adding ", sub_list[j])
+      every j := 1 to *sub_list do
         put(sorted_words, sub_list[j])
-      }
       sub_list := list(0)
     }
   }
   # append any remaining
   if (*sub_list > 0) then {
     sub_list := sort(sub_list)
-    every j := 1 to *sub_list do {
-      write("Adding last ", sub_list[j])
+    every j := 1 to *sub_list do
       put(sorted_words, sub_list[j])
-    }
   }
 
   return sorted_words
@@ -178,6 +167,7 @@ procedure main(args)
   # extract name for output files
   x := extract_name(arg_table["f"])
   write("Extracted name : ", x)
+
   # concatenate new file names
   xs_name := x || "-stats.txt"
   xw_name := x || "-words.txt"
@@ -243,10 +233,6 @@ procedure main(args)
   every i := 1 to *odd do
     odd_chars +:= *odd[i]
   if *odd != 0 then odd_chars := odd_chars/*odd
-  word_freq := sort(word_table, 2)
-  write("unsorted")
-  every i := 1 to *word_freq do
-    write(word_freq[i][1], " ", word_freq[i][2])
   word_freq := alpha_sort(lreverse(sort(word_table, 2)))
 
   # WRITE DATA TO FILES #-----------------------------------
@@ -257,31 +243,49 @@ procedure main(args)
   #              # of sentences, avg length in phrases words, chars
   #              # of phrases, avg length in words, chars
 
-  # STATS DATA #------------------------
+  # print stats for inspection
   write ("\n\n\nData Collected:\n")
-  writes("paragraphs : ", num_P)
-  writes("\tsentence : ", num_s/num_P)
-  writes("\twords : ", num_w/num_P)
-  write ("\tchars : ", P_num_c)
-  writes("sentences : ", num_s)
-  writes("\tphrases : ", num_p/num_s)
-  writes("\twords : ", num_w/num_s)
-  write ("\tchars : ", s_num_c/num_s)
-  writes("phrases : ", num_p)
-  writes("\twords : ", num_w/num_p)
-  write ("\tchars : ", p_num_c/num_p)
-  writes("words : ", num_w)
-  write ("\tchars : ", w_num_c/num_w)
-  writes("oddwords : ", *odd)
-  write ("\tchars : ", odd_chars)
+  writes("paragraphs :\t", num_P)
+  writes("\tsentence :\t", num_s/num_P)
+  writes("\twords :\t", num_w/num_P)
+  write ("\tchars :\t", P_num_c)
+  writes("sentences :\t", num_s)
+  writes("\tphrases :\t", num_p/num_s)
+  writes("\twords :\t", num_w/num_s)
+  write ("\tchars :\t", s_num_c/num_s)
+  writes("phrases :\t", num_p)
+  writes("\twords :\t", num_w/num_p)
+  write ("\tchars :\t", p_num_c/num_p)
+  writes("words :\t", num_w)
+  write ("\tchars :\t", w_num_c/num_w)
+  writes("oddwords :\t", *odd)
+  write ("\tchars :\t", odd_chars)
+
+  # STATS DATA #------------------------
+  write (x_stats, "\n\n\nData Collected:\n")
+  writes(x_stats, "paragraphs :\t", num_P)
+  writes(x_stats, "\tsentence :\t", num_s/num_P)
+  writes(x_stats, "\twords :\t", num_w/num_P)
+  write (x_stats, "\tchars :\t", P_num_c)
+  writes(x_stats, "sentences :\t", num_s)
+  writes(x_stats, "\tphrases :\t", num_p/num_s)
+  writes(x_stats, "\twords :\t", num_w/num_s)
+  write (x_stats, "\tchars :\t", s_num_c/num_s)
+  writes(x_stats, "phrases :\t", num_p)
+  writes(x_stats, "\twords :\t", num_w/num_p)
+  write (x_stats, "\tchars :\t", p_num_c/num_p)
+  writes(x_stats, "words :\t", num_w)
+  write (x_stats, "\tchars :\t", w_num_c/num_w)
+  writes(x_stats, "oddwords :\t", *odd)
+  write (x_stats, "\tchars :\t", odd_chars)
 
   # ODD DATA #--------------------------
   write("\nOdd words\n")
   every i := 1 to *odd do
-    write(odd[i])
+    write(x_odd, odd[i])
 
   # WORD DATA #-------------------------
   write("Unique words : ", *word_freq)
   every i := 1 to *word_freq do
-    write(word_freq[i])
+    write(x_words, word_freq[i])
 end
