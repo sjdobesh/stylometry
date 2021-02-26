@@ -123,19 +123,6 @@ procedure word_list(input)
   return words
 end
 
-# CHARS #---------------------------------------------------
-# delimiters = none
-procedure char_scan(input)
-  count := 0
-  input ? {
-    while move(1) do
-      count +:= 1
-  }
-  # overshot
-  count -:= 1
-  return count
-end
-
 # MAIN #------------------------------------------------------------------------
 procedure main(args)
 
@@ -176,7 +163,7 @@ procedure main(args)
   odd        := set()    # odd words
   word_table := table(0) # word_table
 
-  # parse tree
+  # PARSE #-------------------------------------------------
   paragraphs := paragraphs_list(intext)
   num_P := *paragraphs
   root := list(0)
@@ -219,7 +206,7 @@ procedure main(args)
   if *odd != 0 then odd_chars := odd_chars/*odd
   word_freq := lreverse(sort(word_table, 4))
 
-  # print data
+  # WRITE DATA TO FILES #-----------------------------------
   # data needed:
   #   words    : word frequencies sorted by frequency and lexical order
   #   oddwords : collect any word not present in a dictionary
@@ -227,26 +214,33 @@ procedure main(args)
   #              # of sentences, avg length in phrases words, chars
   #              # of phrases, avg length in words, chars
 
+  # STATS DATA #------------------------
   write ("\n\n\nData Collected:\n")
   writes("paragraphs : ", num_P)
-  writes(" sentence : ", num_s/num_P)
-  writes(" words : ", num_w/num_P)
-  write (" chars : ", P_num_c)
+  writes("\tsentence : ", num_s/num_P)
+  writes("\twords : ", num_w/num_P)
+  write ("\tchars : ", P_num_c)
   writes("sentences : ", num_s)
-  writes(" phrases : ", num_p/num_s)
-  writes(" words : ", num_w/num_s)
-  write (" chars : ", s_num_c/num_s)
+  writes("\tphrases : ", num_p/num_s)
+  writes("\twords : ", num_w/num_s)
+  write ("\tchars : ", s_num_c/num_s)
   writes("phrases : ", num_p)
-  writes(" words : ", num_w/num_p)
-  write (" chars : ", p_num_c/num_p)
+  writes("\twords : ", num_w/num_p)
+  write ("\tchars : ", p_num_c/num_p)
   writes("words : ", num_w)
-  write (" chars : ", w_num_c/num_w)
+  write ("\tchars : ", w_num_c/num_w)
   writes("oddwords : ", *odd)
-  write (" chars : ", odd_chars)
+  write ("\tchars : ", odd_chars)
+
+  # ODD DATA #--------------------------
   every i := 1 to *odd do
     write(odd[i])
+
+
+  # WORD DATA #-------------------------
   #write("\nWord frequency : ")
   #every i := 1 to *word_freq do
   #  write(word_freq[i])
   write("Unique words : ", *word_freq/2)
+
 end
