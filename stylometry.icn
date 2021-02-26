@@ -34,6 +34,14 @@ procedure extract_name(file_path)
   }
 end
 
+# MAKE DICTIONARY SET #---------------------------------------------------------
+procedure make_dictionary(input)
+  dict := set()
+  while (line := read(input)) do
+      insert(dict, line)
+  return dict
+end
+
 # FREQUENCY GENERATOR #---------------------------------------------------------
 procedure get_words_freq(str)
   words := table(0)
@@ -121,6 +129,9 @@ procedure main(args)
   dict    := open(\arg_table["d"]) | stop("Couldn't open dictionary")
   intext  := open(\arg_table["f"]) | stop("Couldn't open file")
 
+  # make dictionary set
+  dict    := make_dictionary(dict)
+
   # extract name for output files
   x := extract_name(arg_table["f"])
   write("Extracted name : ", x)
@@ -167,6 +178,10 @@ procedure main(args)
         words := word_list(phrases[k])
         every l := 1 to *words do {
           num_w +:= 1
+          word_table[words[l]]+:= 1
+          if not member(dict, words[l]) then
+            insert(odd, words[l])
+          # write output for check
           write(words[l])
         }
         put (p_layer, words)
