@@ -34,29 +34,8 @@ procedure extract_name(file_path)
   }
 end
 
-
-# SENTENCE GEN PROCEDURE #------------------------------------------------------
-procedure get_sentences(str)
-  str ? {
-    while tab(upto(".")) do {
-      sentence := tab(many("."))
-      suspend sentence
-    }
-  }
-end
-
-# WORD GEN PROCEDURES #----------------------------------------------------------
-procedure gen_words(str)
-  str ? {
-    while tab(upto(&letters || '.-"\'')) do {
-      word := tab(many(&letters || '.-"\''))
-      suspend word
-    }
-  }
-end
-
-# TABLE GENERATORS ROCEDURES #---------------------------------------------------
-procedure get_words(str)
+# FREQUENCY GENERATOR #---------------------------------------------------------
+procedure get_words_freq(str)
   words := table(0)
   str ? {
     while tab(upto(&letters)) do
@@ -65,40 +44,9 @@ procedure get_words(str)
   return words
 end
 
-procedure file_sentences(input)
-  count := table(0)
-  while line := read(input) do {
-    line ? {
-      while tab(upto(" ")) do
-        count[tab(many(" "))]+:=1
-    }
-  }
-  return count
-end
+# SCAN FUNCTIONS #--------------------------------------------------------------
 
-procedure words_table(input)
-  count := table(0)
-  while line := read(input) do {
-    line ? {
-      while tab(upto(&letters)) do
-        count[tab(many(&letters))]+:=1
-    }
-  }
-  return count
-end
-
-procedure words_list(input)
-  count := list(0)
-  while line := read(input) do {
-    line ? {
-      while tab(upto(&letters)) do
-        put(count, (tab(many(&letters))))
-    }
-  }
-  return lreverse(count)
-end
-
-# make a list of each paragraph
+# PARAGRAPHS #---------------------------------------------
 procedure paragraphs_list(input)
 
   # vars
@@ -133,25 +81,32 @@ procedure paragraphs_list(input)
 end
 
 
-# make a list of each sentence
+# SENTENCES #-----------------------------------------------
 procedure sentence_list(input)
   sentence := list(0)
   input ? {
-    while tab(upto(&letters)) do {
+    while tab(upto(&letters)) do
       put(sentence, tab(many(',:; '++&letters)))
-    }
   }
   return sentence
 end
 
+# PHRASES #--------------------------------------------------
+procedure phrase_list(input)
+  sentence := list(0)
+  input ? {
+    while tab(upto(&letters)) do
+      put(sentence, tab(many(' '++&letters)))
+  }
+  return sentence
+end
 
 # make a list of each word
 procedure word_list(input)
   words := list(0)
   input ? {
-    while tab(upto(&letters)) do {
+    while tab(upto(&letters)) do
       put(words, tab(many(&letters)))
-    }
   }
   return words
 end
@@ -188,26 +143,80 @@ procedure main(args)
   #                # of sentences, avg length in phrases words, chars
   #                # of phrases, avg length in words, chars
 
-  # generate paragraphs (one or more blank lines)
-  paragraphs := paragraphs_list(intext)
-  # check paragraph contents
-  every i := 1 to *paragraphs do write("p ", i, "\n", paragraphs[i])
-  write("\n\n")
+  # data to collect
+  num_P := 0 # <= Paragraphs
+  num_s := 0 # <= sentences
+  num_p := 0 # <= phrases
+  num_w := 0 # <= words
 
+  # generate paragraphs
+  paragraphs := paragraphs_list(intext)
+  num_P := *paragraphs
   # generate sentences
   sentence_tree := list(0)
   every i := 1 to *paragraphs do {
     s_list := sentence_list(paragraphs[i])
     put(sentence_tree, s_list)
   }
+  sentence_tree := lreverse(sentence_tree)
+  num_s := *sentence_tree
 
+  # generate phrases
   every i := 1 to *sentence_tree do {
     write("P ", i)
     every j := 1 to *sentence_tree[i] do {
       write("S ", j)
-      write(sentence_tree[i][j])
+      phrases := phrase_list(sentence_tree[i][j])
+      every k := 1 to *phrases do {
+        write("p ", j)
+        num_p +:= 1
+        words := word_list(phrases[k])
+        every l := 1 to *words do {
+          write("w ", l)
+          write(words[l])
+          num_w +:= 1
+        }
+      }
     }
   }
+
+  # print data
+  write("Num Paragraphs : ", num_P)
+  write("Num sentences : ", num_s)
+  write("Num phrases : ", num_p)
+  write("Num words : ", num_w)
+
+
+
+  # generate paragraphs (one or more blank lines)
+  # paragraphs := paragraphs_list(intext)
+  # check paragraph contents
+  # every i := 1 to *paragraphs do write("p ", i, "\n", paragraphs[i])
+  # write("\n\n")
+
+  # generate sentences
+  #sentence_tree := list(0)
+  #every i := 1 to *paragraphs do {
+  #  s_list := sentence_list(paragraphs[i])
+  #  put(sentence_tree, s_list)
+  #}
+  #sentence_tree := lreverse(sentence_tree)
+
+  #every i := 1 to *sentence_tree do {
+  #  write("P ", i)
+  #  every j := 1 to *sentence_tree[i] do {
+  #    write("S ", j)
+  #    phrases := phrase_list(sentence_tree[i][j])
+  #    every k := 1 to *phrases do {
+  #      write("p ", j)
+  #      words := word_list(phrases[k])
+  #      every l := 1 to *words do {
+  #        write("w ", l)
+  #        write(words[l])
+  #      }
+  #    }
+  #  }
+  #}
   # generate phrases
 
   # generate words
