@@ -123,54 +123,18 @@ procedure word_list(input)
   return words
 end
 
-# SUB SORT #--------------------------------------------------------------------
-# handles non lexical ordered alphabet sort of equal frequencies
-procedure sub_sort(sub_list)
-  # first sort lexically
-  sub_list := sort(sub_list)
-
-  # now seperate upper from lower case
-  upper := list(0)
-  lower := list(0)
-  every i := 1 to *sub_list do {
-    if sub_list[i] ? tab(any(&ucase)) then
-      put(upper, sub_list[i])
-    else
-      put(lower, sub_list[i])
-  }
-
-  # zip the list back together
-  # note this should be the same size as the input
-  l := 1 # lower case iterator
-  u := 1 # upper case iterator
-  out_list := list(0)
-  while (*upper >= u & *lower >= l) do
-    if lower[l] << map(upper[u], &ucase, &lcase) then {
-      put(out_list, lower[l])
-      l +:= 1
-    }
-    else {
-      put(out_list, upper[u])
-      u +:= 1
-    }
-
-  # append any remainder
-  if (*upper > u) then
-    every i := u to *upper do
-      put(out_list, upper[i])
-  else
-    every i := l to *lower do
-      put(out_list, lower[i])
-
-  return out_list
-end
-
 # ALPHA SORT #------------------------------------------------------------------
 # handles non lexical ordered alphabet sort of equal frequencies
 procedure alpha_sort(word_freq)
   sub_list := list(0)
   sorted_words := list(0)
+  # collects sublists of equal frequency
   every i := 1 to *word_freq do {
+    write("i=", i)
+    write("Current sub :")
+    every j := 1 to *sub_list do
+      write(sub_list[j])
+
     if *sub_list = 0 then {
       put(sub_list, (word_freq[i][1] || " " || word_freq[i][2]))
     }
@@ -178,20 +142,24 @@ procedure alpha_sort(word_freq)
       put(sub_list, (word_freq[i][1] || " " || word_freq[i][2]))
     }
     else {
-      sub_list := sub_sort(sub_list)
+      sub_list := sort(sub_list)
       every j := 1 to *sub_list do {
+        write("Adding ", sub_list[j])
         put(sorted_words, sub_list[j])
-        sub_list := list(0)
       }
+      sub_list := list(0)
     }
   }
+  # append any remaining
   if (*sub_list > 0) then {
-    sub_list := sub_sort(sub_list)
+    sub_list := sort(sub_list)
     every j := 1 to *sub_list do {
+      write("Adding last ", sub_list[j])
       put(sorted_words, sub_list[j])
     }
   }
-   return sorted_words
+
+  return sorted_words
 end
 
 # MAIN #------------------------------------------------------------------------
@@ -276,6 +244,10 @@ procedure main(args)
     odd_chars +:= *odd[i]
   if *odd != 0 then odd_chars := odd_chars/*odd
   word_freq := sort(word_table, 2)
+  write("unsorted")
+  every i := 1 to *word_freq do
+    write(word_freq[i][1], " ", word_freq[i][2])
+  word_freq := alpha_sort(lreverse(sort(word_table, 2)))
 
   # WRITE DATA TO FILES #-----------------------------------
   # data needed:
@@ -308,16 +280,8 @@ procedure main(args)
   every i := 1 to *odd do
     write(odd[i])
 
-
   # WORD DATA #-------------------------
-  #write("\nWord frequency : ")
-  #every i := 1 to *word_freq do
-  #  write(word_freq[i])
   write("Unique words : ", *word_freq)
-
-  # subsort lexically
-  sorted_words := alpha_sort(word_freq)
-
-  every i := 1 to *sorted_words do
-    write(sorted_words[i])
+  every i := 1 to *word_freq do
+    write(word_freq[i])
 end
