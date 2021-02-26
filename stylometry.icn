@@ -53,14 +53,16 @@ procedure get_words_freq(str)
 end
 
 # SCAN FUNCTIONS #--------------------------------------------------------------
+# The following functions scan their input for the corresponding
+# unit of text and assemble these units into a list.
 
 # PARAGRAPHS #---------------------------------------------
+# delimiters = (empty line)
 procedure paragraphs_list(input)
-
   # vars
   paragraphs := list(0) # (p)aragraph list to accumulate
   p          := ""      # string to accumulate each p into
-  on_p       := 0       # flag for whether the current scan is part of a p
+  on_p       := 0       # flag for whthe current scan is part of a p
   last       := 0       # weather the last scan was part of a p
 
   # read in each line
@@ -88,8 +90,8 @@ procedure paragraphs_list(input)
   return lreverse(paragraphs)
 end
 
-
 # SENTENCES #-----------------------------------------------
+# delimiters = '.!?'
 procedure sentence_list(input)
   sentence := list(0)
   input ? {
@@ -100,6 +102,7 @@ procedure sentence_list(input)
 end
 
 # PHRASES #--------------------------------------------------
+# delimiters = ',;:'
 procedure phrase_list(input)
   sentence := list(0)
   input ? {
@@ -110,6 +113,7 @@ procedure phrase_list(input)
 end
 
 # WORDS #---------------------------------------------------
+# delimiters = ' '
 procedure word_list(input)
   words := list(0)
   input ? {
@@ -155,12 +159,13 @@ procedure main(args)
   #              # of phrases, avg length in words, chars
 
   # data to collect
-  num_P      := 0        # <= Paragraphs
-  num_s      := 0        # <= sentences
-  num_p      := 0        # <= phrases
-  num_w      := 0        # <= words
-  odd        := set()    # <= odd words
-  word_table := table(0) # <= word_table
+  num_P      := 0        # Paragraphs
+  num_s      := 0        # sentences
+  num_p      := 0        # phrases
+  num_w      := 0        # words
+  num_c      := 0        # chars
+  odd        := set()    # odd words
+  word_table := table(0) # word_table
 
   # parse tree
   paragraphs := paragraphs_list(intext)
@@ -178,6 +183,7 @@ procedure main(args)
         words := word_list(phrases[k])
         every l := 1 to *words do {
           num_w +:= 1
+          num_c +:= *words[l]
           word_table[words[l]]+:= 1
           if not member(dict, map(words[l], &ucase, &lcase)) then
             insert(odd, words[l])
@@ -194,10 +200,12 @@ procedure main(args)
   odd := sort(odd)
 
   # print data
+  write("\n\n\nData Collected:\n")
   write("Num Paragraphs : ", num_P)
   write("Num sentences : ", num_s)
   write("Num phrases : ", num_p)
   write("Num words : ", num_w)
+  write("Num chars : ", num_c)
   write("Odd words : ")
   every i := 1 to *odd do
     write(odd[i])
