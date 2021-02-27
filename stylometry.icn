@@ -20,6 +20,7 @@ procedure usage(err_str)
 end
 
 # VALIDATION PROCEDURE #--------------------------------------------------------
+# read and validate arguments
 procedure validate(arguments)
   # check number of arguments
   if not (*arguments = 0 | *arguments = 2 | *arguments = 4) then {
@@ -39,7 +40,7 @@ procedure validate(arguments)
 end
 
 # NAME EXTRACTION PROCEDURE #---------------------------------------------------
-# knock off the .txt
+# get name of input file from a file path, minus any file extensions
 procedure extract_name(file_path)
   # get the portion of string after the last "/"
   file_path ? {
@@ -174,9 +175,9 @@ end
 # MAIN #------------------------------------------------------------------------
 procedure main(args)
 
+  # SETUP #-------------------------------------------------
   # read args
   arg_table := validate(args) | exit(-1)
-
   # open files to read in data
   dict := open(\arg_table["d"]) | stop("Couldn't open dictionary")
   # if no file provided then read from std in instead
@@ -186,28 +187,23 @@ procedure main(args)
   else {
     intext := &input
   }
-
   # make dictionary set
   dict    := make_dictionary(dict)
-
   # extract name for output files
   if \arg_table["f"] then
     x := extract_name(arg_table["f"])
   else
     x := "x"
-
   # concatenate new file names
   xs_name := x || "-stats.txt"
   xw_name := x || "-words.txt"
   xo_name := x || "-oddwords.txt"
-
   # open output files for writing
   x_stats := open(xs_name, "w") | stop("Error opening file")
   x_words := open(xw_name, "w") | stop("Error opening file")
   x_odd   := open(xo_name, "w") | stop("Error opening file")
 
-  # read in text to analyze
-
+  # PARSE #-------------------------------------------------
   # data to collect
   num_P      := 0        # Paragraphs
   num_s      := 0        # sentences
@@ -220,8 +216,6 @@ procedure main(args)
   odd_chars  := 0.0      # chars in oddwords
   odd        := set()    # odd words
   word_table := table(0) # word_table
-
-  # PARSE #-------------------------------------------------
   # depth first parse of tree
   # root -> pragraphs -> sentences -> phrases -> words
   paragraphs := paragraphs_list(intext)
@@ -264,32 +258,36 @@ procedure main(args)
   if *odd > 0 then odd_chars := 1.0*odd_chars/*odd
 
   # WRITE DATA TO FILES #-----------------------------------
-  # data needed:
+  #
   #   words    : word frequencies sorted by frequency and lexical order
-  #   oddwords : collect any word not present in a dictionary
+  #
+  #   oddwords : collect any word not present in a dictionary, lexical order
+  #
   #   stats    : # of paragraphs, avg length in sentences, words, chars
   #              # of sentences, avg length in phrases words, chars
   #              # of phrases, avg length in words, chars
+  #              # of words, avg length in chars
+  #              # of oddwords, avg length in chars
 
   # STATS DATA #------------------------
   fprintf(x_stats, "paragraphs   %d", num_P)
   fprintf(x_stats, "\taverage length    ")
   fprintf(x_stats, "%.2r sentences\t", 1.0*num_s/num_P)
   fprintf(x_stats, "%.2r words    \t", 1.0*num_w/num_P)
-  fprintf(x_stats, "%.2r characters", 1.0*P_num_c/num_P)
-  fprintf(x_stats, "\nsentences    %d", num_s)
+  fprintf(x_stats, "%.2r characters\n", 1.0*P_num_c/num_P)
+  fprintf(x_stats, "sentences    %d", num_s)
   fprintf(x_stats, "\taverage length    ")
   fprintf(x_stats, "%.2r phrases  \t", 1.0*num_p/num_s)
   fprintf(x_stats, "%.2r words    \t", 1.0*num_w/num_s)
-  fprintf(x_stats, "%.2r characters", 1.0*s_num_c/num_s)
-  fprintf(x_stats, "\nphrases      %d", num_p)
+  fprintf(x_stats, "%.2r characters\n", 1.0*s_num_c/num_s)
+  fprintf(x_stats, "phrases      %d", num_p)
   fprintf(x_stats, "\taverage length    ")
   fprintf(x_stats, "%.2r words    \t", 1.0*num_w/num_p)
-  fprintf(x_stats, "%.2r characters", 1.0*p_num_c/num_p)
-  fprintf(x_stats, "\nwords        %d", num_w)
+  fprintf(x_stats, "%.2r characters\n", 1.0*p_num_c/num_p)
+  fprintf(x_stats, "words        %d", num_w)
   fprintf(x_stats, "\taverage length    ")
-  fprintf(x_stats, "%.2r characters", 1.0*w_num_c/num_w)
-  fprintf(x_stats, "\noddwords     %d", *odd)
+  fprintf(x_stats, "%.2r characters\n", 1.0*w_num_c/num_w)
+  fprintf(x_stats, "oddwords     %d", *odd)
   fprintf(x_stats, "\taverage length    ")
   fprintf(x_stats, "%.2r characters\n", odd_chars)
 
@@ -300,4 +298,5 @@ procedure main(args)
   # WORD DATA #-------------------------
   every i := 1 to *word_freq do
     write(x_words, word_freq[i])
+
 end
