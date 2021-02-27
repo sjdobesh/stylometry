@@ -98,7 +98,9 @@ end
 procedure sentence_list(input)
   sentence := list(0)
   input ? {
-    while tab(upto(&cset--' .!?')) do #can start with anything but space
+    # sentences are allowed to start on any character
+    # other than what the end with and spaces
+    while tab(upto(&cset--' .!?')) do
       put(sentence, tab(many(&cset--'.!?')))
   }
   return sentence
@@ -254,7 +256,6 @@ procedure main(args)
   #              # of phrases, avg length in words, chars
 
   # print stats for inspection
-  write ("\n\n\nData Collected:\n")
   printf("paragraphs   %d", num_P)
   printf("\taverage length    ")
   printf("%.2r sentences\t", 1.0*num_s/num_P)
@@ -277,34 +278,32 @@ procedure main(args)
   printf("%.2r characters", odd_chars)
 
   # STATS DATA #------------------------
-  fprintf(x_stats, "paragraphs  ", num_P)
+  fprintf(x_stats, "paragraphs   %d", num_P)
   fprintf(x_stats, "\taverage length    ")
   fprintf(x_stats, "%.2r sentences\t", 1.0*num_s/num_P)
   fprintf(x_stats, "%.2r words    \t", 1.0*num_w/num_P)
   fprintf(x_stats, "%.2r characters", 1.0*P_num_c/num_P)
-  fprintf(x_stats, "\nsentences    ", num_s)
+  fprintf(x_stats, "\nsentences    %d", num_s)
   fprintf(x_stats, "\taverage length    ")
   fprintf(x_stats, "%.2r phrases  \t", 1.0*num_p/num_s)
   fprintf(x_stats, "%.2r words    \t", 1.0*num_w/num_s)
   fprintf(x_stats, "%.2r characters", 1.0*s_num_c/num_s)
-  fprintf(x_stats, "\nphrases      ", num_p)
+  fprintf(x_stats, "\nphrases      %d", num_p)
   fprintf(x_stats, "\taverage length    ")
   fprintf(x_stats, "%.2r words    \t", 1.0*num_w/num_p)
   fprintf(x_stats, "%.2r characters", 1.0*p_num_c/num_p)
-  fprintf(x_stats, "\nwords        ", num_w)
+  fprintf(x_stats, "\nwords        %d", num_w)
   fprintf(x_stats, "\taverage length    ")
   fprintf(x_stats, "%.2r characters", 1.0*w_num_c/num_w)
-  fprintf(x_stats, "\noddwords     ", *odd,"\n")
+  fprintf(x_stats, "\noddwords     %d", *odd)
   fprintf(x_stats, "\taverage length    ")
-  fprintf(x_stats, "%.2r characters", odd_chars)
+  fprintf(x_stats, "%.2r characters\n", odd_chars)
 
   # ODD DATA #--------------------------
-  write("\nOdd words\n")
   every i := 1 to *odd do
     write(x_odd, odd[i])
 
   # WORD DATA #-------------------------
-  write("Unique words : ", *word_freq)
   every i := 1 to *word_freq do
     write(x_words, word_freq[i])
 end
