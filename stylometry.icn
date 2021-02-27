@@ -11,23 +11,28 @@ link options
 link lists
 link printf
 
+# PRINT USAGE #-----------------------------------------------------------------
+# error proc for options.icn to print arg errors and usage
+procedure usage(err_str)
+  write(\err_str)
+  write(&errout, "Argument Error\nUsage:\n./prog4 [-d dictionary] [-f file]\n")
+  exit(-1)
+end
+
 # VALIDATION PROCEDURE #--------------------------------------------------------
 procedure validate(arguments)
-  usage := "Argument Error\nUsage:\n./prog4 [-d dictionary] [-f file]"
   # check number of arguments
-  if *arguments != 4 then {
-    write(usage)
-    fail
+  if not (*arguments = 0 | *arguments = 2 | *arguments = 4) then {
+    usage("")
   }
   # using options.icn parser
-  opt_table := options(arguments,"d:f:")
-
+  opt_table := options(arguments,"d:f:", usage)
   if not member(opt_table, "d") then {
     opt_table["d"] := "dict"
     write("No dictionary provided, searching for default 'dict'...")
   }
   if not member(opt_table, "f") then {
-    write("No file provided, reading from standard in...")
+    write("No file provided, reading from standard in (ctrl-d to finish)...")
   }
 
   return opt_table
@@ -40,8 +45,8 @@ procedure extract_name(file_path)
   file_path ? {
     while tab(upto("/")) do
       tab(many("/"))
-    # remove ".txt"
-    return (tab(find(".")))
+    # remove ".txt" if it's there
+    return (tab(find("."))) | tab(0)
   }
 end
 
