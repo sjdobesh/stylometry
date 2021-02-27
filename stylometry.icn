@@ -21,10 +21,20 @@ procedure validate(arguments)
   }
   # using options.icn parser
   opt_table := options(arguments,"d:f:")
-  return \opt_table
+
+  if not member(opt_table, "d") then {
+    opt_table["d"] := "dict"
+    write("No dictionary provided, searching for default 'dict'...")
+  }
+  if not member(opt_table, "f") then {
+    write("No file provided, reading from standard in...")
+  }
+
+  return opt_table
 end
 
 # NAME EXTRACTION PROCEDURE #---------------------------------------------------
+# knock off the .txt
 procedure extract_name(file_path)
   # get the portion of string after the last "/"
   file_path ? {
@@ -36,21 +46,12 @@ procedure extract_name(file_path)
 end
 
 # MAKE DICTIONARY SET #---------------------------------------------------------
+# reads dict file into a set for us to query
 procedure make_dictionary(input)
   dict := set()
   while (line := read(input)) do
       insert(dict, line)
   return dict
-end
-
-# FREQUENCY GENERATOR #---------------------------------------------------------
-procedure get_words_freq(str)
-  words := table(0)
-  str ? {
-    while tab(upto(&letters)) do
-      words[tab(many(&letters))]+:=1
-  }
-  return words
 end
 
 # SCAN FUNCTIONS #--------------------------------------------------------------
@@ -64,18 +65,18 @@ procedure paragraphs_list(input)
   # vars
   paragraphs := list(0) # (p)aragraph list to accumulate
   p          := ""      # string to accumulate each p into
-  on_p       := 0       # flag for whthe current scan is part of a p
-  last       := 0       # weather the last scan was part of a p
+  on_p       := 0       # flag for if current scan is part of a p
+  last       := 0       # whether the last scan was part of a p
 
   # read in each line
   while line := read(input) do {
     # flag tells us wether this is a paragraph or not
     if *line == 0 then on_p := 0 else on_p := 1
-    # accumulate
+    # if it is a paragraph, accumulate it via concatenation
     if on_p = 1 then {
       p ||:= (line ||:= ' ')
     }
-    # add entry to the paragraph list
+    # otherwise add the entry to the paragraph list
     else if on_p = 0 & last = 1 then {
       put(paragraphs, p)
       p := ""
@@ -83,8 +84,8 @@ procedure paragraphs_list(input)
     # keep track of last scan
     last := on_p
   }
-
   # check if we exited loop on a paragraph
+  # if so we need to add the last one
   if on_p = 1 then {
     put(paragraphs, p)
   }
@@ -135,30 +136,33 @@ procedure word_list(input)
 end
 
 # ALPHA SORT #------------------------------------------------------------------
-# handles non lexical ordered alphabet sort of equal frequencies
+# handles alphabetical sub sort of equal frequencies
 procedure alpha_sort(word_freq)
   sub_list := list(0)
   sorted_words := list(0)
-  # collects sublists of equal frequency
+  # collect sublists of equal frequency and alphabetize
   every i := 1 to *word_freq do {
+    # if our list is empty, start it
     if *sub_list = 0 then
       put(sub_list, (word_freq[i][1] || " " || word_freq[i][2]))
+    # if our list isn't empty and this freq is same as last, add it
     else if *sub_list > 0 & word_freq[i][2] == word_freq[i-1][2] then
       put(sub_list, (word_freq[i][1] || " " || word_freq[i][2]))
+    # otherwise they are different frequencies, sort what we have and add it
     else {
       sub_list := sort(sub_list)
       every j := 1 to *sub_list do
         put(sorted_words, sub_list[j])
+      # don't forget to empty the list
       sub_list := list(0)
     }
   }
-  # append any remaining
+  # append any remaining elements
   if (*sub_list > 0) then {
     sub_list := sort(sub_list)
     every j := 1 to *sub_list do
       put(sorted_words, sub_list[j])
   }
-
   return sorted_words
 end
 
@@ -169,15 +173,23 @@ procedure main(args)
   arg_table := validate(args) | exit(-1)
 
   # open files to read in data
-  dict    := open(\arg_table["d"]) | stop("Couldn't open dictionary")
-  intext  := open(\arg_table["f"]) | stop("Couldn't open file")
+  dict := open(\arg_table["d"]) | stop("Couldn't open dictionary")
+  # if no file provided then read from std in instead
+  if \arg_table["f"] then {
+    intext := open(\arg_table["f"]) | stop("Couldn't open file")
+  }
+  else {
+    intext := &input
+  }
 
   # make dictionary set
   dict    := make_dictionary(dict)
 
   # extract name for output files
-  x := extract_name(arg_table["f"])
-  write("Extracted name : ", x)
+  if \arg_table["f"] then
+    x := extract_name(arg_table["f"])
+  else
+    x := "x"
 
   # concatenate new file names
   xs_name := x || "-stats.txt"
@@ -205,40 +217,39 @@ procedure main(args)
   word_table := table(0) # word_table
 
   # PARSE #-------------------------------------------------
+  # depth first parse of tree
+  # root -> pragraphs -> sentences -> phrases -> words
   paragraphs := paragraphs_list(intext)
   num_P := *paragraphs
-  root := list(0)
+  # for each paragraph
   every i := 1 to *paragraphs do {
     P_num_c +:= *paragraphs[i]
     sentences := sentence_list(paragraphs[i])
-    s_layer := list(0)
+    # for each sentence
     every j := 1 to *sentences do {
       num_s +:= 1
       s_num_c +:= *sentences[j] + 1
       phrases := phrase_list(sentences[j])
-      p_layer := list(0)
+      # for each phrase
       every k := 1 to *phrases do {
         num_p +:= 1
         p_num_c +:= *phrases[k]
         words := word_list(phrases[k])
+        # for each word
         every l := 1 to *words do {
           num_w +:= 1
           w_num_c +:= *words[l]
+          # add to frequency list
           word_table[words[l]]+:= 1
+          # I don't think I can make this line less than 80 :(
+          # look up word and lowercase counter part in dict
           if not (member(dict, map(words[l], &ucase, &lcase)) | member(dict, words[l])) then
             insert(odd, words[l])
-          # write output for check
-          # write(words[l])
         }
-        put(p_layer, words)
       }
-      put(s_layer, p_layer)
     }
-    put(root, s_layer)
   }
   P_num_c -:= 1
-  # at this point root contains the whole tree
-  # and we have counts of each layer of nodes
 
   # sort words for frequency and oddwords lexically
   word_freq := alpha_sort(lreverse(sort(word_table, 2)))
@@ -254,28 +265,6 @@ procedure main(args)
   #   stats    : # of paragraphs, avg length in sentences, words, chars
   #              # of sentences, avg length in phrases words, chars
   #              # of phrases, avg length in words, chars
-
-  # print stats for inspection
-  printf("paragraphs   %d", num_P)
-  printf("\taverage length    ")
-  printf("%.2r sentences\t", 1.0*num_s/num_P)
-  printf("%.2r words    \t", 1.0*num_w/num_P)
-  printf("%.2r characters", 1.0*P_num_c/num_P)
-  printf("\nsentences    %d", num_s)
-  printf("\taverage length    ")
-  printf("%.2r phrases  \t", 1.0*num_p/num_s)
-  printf("%.2r words    \t", 1.0*num_w/num_s)
-  printf("%.2r characters", 1.0*s_num_c/num_s)
-  printf("\nphrases      %d", num_p)
-  printf("\taverage length    ")
-  printf("%.2r words    \t", 1.0*num_w/num_p)
-  printf("%.2r characters", 1.0*p_num_c/num_p)
-  printf("\nwords        %d", num_w)
-  printf("\taverage length    ")
-  printf("%.2r characters", 1.0*w_num_c/num_w)
-  printf("\noddwords     %d", *odd)
-  printf("\taverage length    ")
-  printf("%.2r characters", odd_chars)
 
   # STATS DATA #------------------------
   fprintf(x_stats, "paragraphs   %d", num_P)
