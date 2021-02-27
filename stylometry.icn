@@ -9,6 +9,7 @@
 # Links
 link options
 link lists
+link printf
 
 # VALIDATION PROCEDURE #--------------------------------------------------------
 procedure validate(arguments)
@@ -58,6 +59,7 @@ end
 
 # PARAGRAPHS #---------------------------------------------
 # delimiters = (empty line)
+# note that we are concatenating each paragraph into a single string
 procedure paragraphs_list(input)
   # vars
   paragraphs := list(0) # (p)aragraph list to accumulate
@@ -91,34 +93,41 @@ procedure paragraphs_list(input)
 end
 
 # SENTENCES #-----------------------------------------------
+# beginning  = any sequence of characters
 # delimiters = '.!?'
 procedure sentence_list(input)
   sentence := list(0)
   input ? {
-    while tab(upto(&letters)) do
-      put(sentence, tab(many(',:; '++&letters)))
+    while tab(upto(&cset--' .!?')) do #can start with anything but space
+      put(sentence, tab(many(&cset--'.!?')))
   }
   return sentence
 end
 
 # PHRASES #--------------------------------------------------
+# beginning  = 'alphabetic character' (any word)
 # delimiters = ',;:'
+
+# *note that we already delimited by .!? so
+# they have already been removed from the input here
+
 procedure phrase_list(input)
   sentence := list(0)
   input ? {
     while tab(upto(&letters)) do
-      put(sentence, tab(many(' '++&letters)))
+      put(sentence, tab(many(&cset--',;:')))
   }
   return sentence
 end
 
 # WORDS #---------------------------------------------------
-# delimiters = ' '
+# beginning  = 'alphabetic character'
+# delimiters = ' '(space)
 procedure word_list(input)
   words := list(0)
   input ? {
     while tab(upto(&letters)) do
-      put(words, tab(many(&letters)))
+      put(words, tab(many(&letters++'-')))
   }
   return words
 end
@@ -181,14 +190,15 @@ procedure main(args)
   # read in text to analyze
 
   # data to collect
-  num_P      := 0.0      # Paragraphs
-  num_s      := 0.0      # sentences
-  num_p      := 0.0      # phrases
-  num_w      := 0.0      # words
+  num_P      := 0        # Paragraphs
+  num_s      := 0        # sentences
+  num_p      := 0        # phrases
+  num_w      := 0        # words
   P_num_c    := 0.0      # chars in Paragraphs
   s_num_c    := 0.0      # chars in sentences
   p_num_c    := 0.0      # chars in phrases
-  w_num_c    := 0.0      # chars in phrases
+  w_num_c    := 0.0      # chars in words
+  odd_chars  := 0.0      # chars in oddwords
   odd        := set()    # odd words
   word_table := table(0) # word_table
 
@@ -213,7 +223,7 @@ procedure main(args)
           num_w +:= 1
           w_num_c +:= *words[l]
           word_table[words[l]]+:= 1
-          if not member(dict, map(words[l], &ucase, &lcase)) then
+          if not (member(dict, map(words[l], &ucase, &lcase)) | member(dict, words[l])) then
             insert(odd, words[l])
           # write output for check
           # write(words[l])
@@ -226,14 +236,14 @@ procedure main(args)
   }
   P_num_c -:= 1
   # at this point root contains the whole tree
+  # and we have counts of each layer of nodes
 
   # sort words for frequency and oddwords lexically
+  word_freq := alpha_sort(lreverse(sort(word_table, 2)))
   odd := sort(odd, 4)
-  odd_chars := 0
   every i := 1 to *odd do
     odd_chars +:= *odd[i]
-  if *odd != 0 then odd_chars := odd_chars/*odd
-  word_freq := alpha_sort(lreverse(sort(word_table, 2)))
+  if *odd > 0 then odd_chars := 1.0*odd_chars/*odd
 
   # WRITE DATA TO FILES #-----------------------------------
   # data needed:
@@ -245,39 +255,48 @@ procedure main(args)
 
   # print stats for inspection
   write ("\n\n\nData Collected:\n")
-  writes("paragraphs :\t", num_P)
-  writes("\tsentence :\t", num_s/num_P)
-  writes("\twords :\t", num_w/num_P)
-  write ("\tchars :\t", P_num_c)
-  writes("sentences :\t", num_s)
-  writes("\tphrases :\t", num_p/num_s)
-  writes("\twords :\t", num_w/num_s)
-  write ("\tchars :\t", s_num_c/num_s)
-  writes("phrases :\t", num_p)
-  writes("\twords :\t", num_w/num_p)
-  write ("\tchars :\t", p_num_c/num_p)
-  writes("words :\t", num_w)
-  write ("\tchars :\t", w_num_c/num_w)
-  writes("oddwords :\t", *odd)
-  write ("\tchars :\t", odd_chars)
+  printf("paragraphs   %d", num_P)
+  printf("\taverage length    ")
+  printf("%.2r sentences\t", 1.0*num_s/num_P)
+  printf("%.2r words    \t", 1.0*num_w/num_P)
+  printf("%.2r characters", 1.0*P_num_c/num_P)
+  printf("\nsentences    %d", num_s)
+  printf("\taverage length    ")
+  printf("%.2r phrases  \t", 1.0*num_p/num_s)
+  printf("%.2r words    \t", 1.0*num_w/num_s)
+  printf("%.2r characters", 1.0*s_num_c/num_s)
+  printf("\nphrases      %d", num_p)
+  printf("\taverage length    ")
+  printf("%.2r words    \t", 1.0*num_w/num_p)
+  printf("%.2r characters", 1.0*p_num_c/num_p)
+  printf("\nwords        %d", num_w)
+  printf("\taverage length    ")
+  printf("%.2r characters", 1.0*w_num_c/num_w)
+  printf("\noddwords     %d", *odd)
+  printf("\taverage length    ")
+  printf("%.2r characters", odd_chars)
 
   # STATS DATA #------------------------
-  write (x_stats, "\n\n\nData Collected:\n")
-  writes(x_stats, "paragraphs :\t", num_P)
-  writes(x_stats, "\tsentence :\t", num_s/num_P)
-  writes(x_stats, "\twords :\t", num_w/num_P)
-  write (x_stats, "\tchars :\t", P_num_c)
-  writes(x_stats, "sentences :\t", num_s)
-  writes(x_stats, "\tphrases :\t", num_p/num_s)
-  writes(x_stats, "\twords :\t", num_w/num_s)
-  write (x_stats, "\tchars :\t", s_num_c/num_s)
-  writes(x_stats, "phrases :\t", num_p)
-  writes(x_stats, "\twords :\t", num_w/num_p)
-  write (x_stats, "\tchars :\t", p_num_c/num_p)
-  writes(x_stats, "words :\t", num_w)
-  write (x_stats, "\tchars :\t", w_num_c/num_w)
-  writes(x_stats, "oddwords :\t", *odd)
-  write (x_stats, "\tchars :\t", odd_chars)
+  fprintf(x_stats, "paragraphs  ", num_P)
+  fprintf(x_stats, "\taverage length    ")
+  fprintf(x_stats, "%.2r sentences\t", 1.0*num_s/num_P)
+  fprintf(x_stats, "%.2r words    \t", 1.0*num_w/num_P)
+  fprintf(x_stats, "%.2r characters", 1.0*P_num_c/num_P)
+  fprintf(x_stats, "\nsentences    ", num_s)
+  fprintf(x_stats, "\taverage length    ")
+  fprintf(x_stats, "%.2r phrases  \t", 1.0*num_p/num_s)
+  fprintf(x_stats, "%.2r words    \t", 1.0*num_w/num_s)
+  fprintf(x_stats, "%.2r characters", 1.0*s_num_c/num_s)
+  fprintf(x_stats, "\nphrases      ", num_p)
+  fprintf(x_stats, "\taverage length    ")
+  fprintf(x_stats, "%.2r words    \t", 1.0*num_w/num_p)
+  fprintf(x_stats, "%.2r characters", 1.0*p_num_c/num_p)
+  fprintf(x_stats, "\nwords        ", num_w)
+  fprintf(x_stats, "\taverage length    ")
+  fprintf(x_stats, "%.2r characters", 1.0*w_num_c/num_w)
+  fprintf(x_stats, "\noddwords     ", *odd,"\n")
+  fprintf(x_stats, "\taverage length    ")
+  fprintf(x_stats, "%.2r characters", odd_chars)
 
   # ODD DATA #--------------------------
   write("\nOdd words\n")
