@@ -1,9 +1,11 @@
 #------------------------------------#
-# Stylometric Analysis               |
-# Author: Samuel Dobesh              |
-# Desc: Process a piece of text and  |
-#       produce a stats, words, and  |
-#       oddwords analysis files      |
+# Stylometric Analysis               #
+# Author: Samuel Dobesh              #
+# Class: CSCI 512, Meehan            #
+# Date: Feb, 2021                    #
+# Desc: Process a piece of text and  #
+#       produce a stats, words, and  #
+#       oddwords analysis files      #
 #------------------------------------#----------------------------------------80
 
 # Links
