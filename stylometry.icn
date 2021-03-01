@@ -94,6 +94,11 @@ procedure paragraphs_list(input)
   return lreverse(paragraphs)
 end
 
+# The following three procs, sentence_list(), phrase_list(), and word_list()
+# all work in an analogous manner. While we can tab up to a valid starting char,
+# we will tab up to the last valid character with many() and put() this
+# substring on our list. When we are finished, return the accumulated list.
+
 # SENTENCES #-------------------------------------------------------------------
 # returns a list of sentences in the input string
 # beginning  = any sequence of characters
@@ -101,8 +106,8 @@ end
 procedure sentence_list(input)
   sentence := list(0)
   input ? {
-    # sentences are allowed to start on any character
-    # other than what the end with and spaces
+    # sentences are allowed to start on any
+    # character other than delimiters and spaces
     while tab(upto(&cset--' .!?')) do
       put(sentence, tab(many(&cset--'.!?')))
   }
@@ -112,7 +117,7 @@ end
 # PHRASES #---------------------------------------------------------------------
 # returns a list of phrases in the input string
 # beginning  = 'alphabetic character' (any word)
-# delimiters = '.!?,;:'
+# delimiters = '!,.?:;'
 
 # *note that we already delimited by .!? so
 # they have already been removed from the input here
@@ -121,9 +126,9 @@ procedure phrase_list(input)
   sentence := list(0)
   input ? {
     # phrases begin with words and can
-    # end with anything that's not a delimiter
+    # include anything that's not a delimiter
     while tab(upto(&letters)) do
-      put(sentence, tab(many(&cset--',;:')))
+      put(sentence, tab(many(&cset--',:;')))
   }
   return sentence
 end
@@ -182,10 +187,10 @@ procedure main(args)
   # read args
   arg_table := validate(args) | exit(-1)
   # open files to read in data
-  dict := open(\arg_table["d"]) | stop("Couldn't open dictionary")
+  dict := open(\arg_table["d"]) | stop("Error\nCouldn't open dictionary...")
   # if no file provided then read from std in instead
   if \arg_table["f"] then
-    intext := open(\arg_table["f"]) | stop("Couldn't open file")
+    intext := open(\arg_table["f"]) | stop("Error\nCouldn't open file...")
   else
     intext := &input
   # make dictionary set
@@ -254,7 +259,7 @@ procedure main(args)
       }
     }
   }
-  P_num_c -:= 1 # don't count <feff> char
+  P_num_c -:= 1 # don't count <feff> char or end of stream
   # sort words for frequency and oddwords lexically
   word_freq := alpha_sort(lreverse(sort(word_table, 2)))
   odd := sort(odd, 4)
