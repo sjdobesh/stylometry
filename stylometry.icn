@@ -7,15 +7,16 @@
 #------------------------------------#----------------------------------------80
 
 # Links
-link options
-link lists
-link printf
+link options # for arg processing
+link lists   # for list reversing proc, lreverse()
+link printf  # for formatting stats with fprintf()
 
 # PRINT USAGE #-----------------------------------------------------------------
 # error proc for options.icn to print arg errors and usage
 procedure usage(err_str)
+  # write error if we get one
   write(\err_str)
-  write(&errout, "Argument Error\nUsage:\n./prog4 [-d dictionary] [-f file]\n")
+  write(&errout, "Error\nUsage:\n./prog4 [-d dictionary] [-f file]\n")
   exit(-1)
 end
 
@@ -23,19 +24,17 @@ end
 # read and validate arguments
 procedure validate(arguments)
   # check number of arguments
-  if not (*arguments = 0 | *arguments = 2 | *arguments = 4) then {
-    usage("")
-  }
+  if not (*arguments = 0 | *arguments = 2 | *arguments = 4) then
+    usage()
   # using options.icn parser
-  opt_table := options(arguments,"d:f:", usage)
+  opt_table := options(arguments,"d:f:", usage) #<=throw usage error
   if not member(opt_table, "d") then {
     opt_table["d"] := "dict"
-    write("No dictionary provided, searching for default 'dict'...")
+    write("No dictionary provided, using default 'dict' if available...")
   }
-  if not member(opt_table, "f") then {
+  if not member(opt_table, "f") then
     write("No file provided, reading from standard in (ctrl-d to finish)...")
-  }
-
+  # return finished table
   return opt_table
 end
 
@@ -60,13 +59,9 @@ procedure make_dictionary(input)
   return dict
 end
 
-# SCAN FUNCTIONS #--------------------------------------------------------------
-# The following functions scan their input for the corresponding
-# unit of text and assemble these units into a list.
-
-# PARAGRAPHS #---------------------------------------------
+# PARAGRAPHS #------------------------------------------------------------------
+# returns a list of paragraphs in the provided input file as strings
 # delimiters = (empty line)
-# note that we are concatenating each paragraph into a single string
 procedure paragraphs_list(input)
   # vars
   paragraphs := list(0) # (p)aragraph list to accumulate
@@ -99,7 +94,8 @@ procedure paragraphs_list(input)
   return lreverse(paragraphs)
 end
 
-# SENTENCES #-----------------------------------------------
+# SENTENCES #-------------------------------------------------------------------
+# returns a list of sentences in the input string
 # beginning  = any sequence of characters
 # delimiters = '.!?'
 procedure sentence_list(input)
@@ -113,9 +109,10 @@ procedure sentence_list(input)
   return sentence
 end
 
-# PHRASES #--------------------------------------------------
+# PHRASES #---------------------------------------------------------------------
+# returns a list of phrases in the input string
 # beginning  = 'alphabetic character' (any word)
-# delimiters = ',;:'
+# delimiters = '.!?,;:'
 
 # *note that we already delimited by .!? so
 # they have already been removed from the input here
@@ -123,18 +120,23 @@ end
 procedure phrase_list(input)
   sentence := list(0)
   input ? {
+    # phrases begin with words and can
+    # end with anything that's not a delimiter
     while tab(upto(&letters)) do
       put(sentence, tab(many(&cset--',;:')))
   }
   return sentence
 end
 
-# WORDS #---------------------------------------------------
+# WORDS #-----------------------------------------------------------------------
+# returns a list of words in the input string
 # beginning  = 'alphabetic character'
 # delimiters = ' '(space)
 procedure word_list(input)
   words := list(0)
   input ? {
+    # words have to start with a letter
+    # but they're allowed to include or end with hyphens
     while tab(upto(&letters)) do
       put(words, tab(many(&letters++'-')))
   }
@@ -169,24 +171,23 @@ procedure alpha_sort(word_freq)
     every j := 1 to *sub_list do
       put(sorted_words, sub_list[j])
   }
+  # now sorted by frequency and then ascii value
   return sorted_words
 end
 
-# MAIN #------------------------------------------------------------------------
+# MAIN #========================================================================
 procedure main(args)
 
-  # SETUP #-------------------------------------------------
+  # SETUP #---------------------------------------------------------------------
   # read args
   arg_table := validate(args) | exit(-1)
   # open files to read in data
   dict := open(\arg_table["d"]) | stop("Couldn't open dictionary")
   # if no file provided then read from std in instead
-  if \arg_table["f"] then {
+  if \arg_table["f"] then
     intext := open(\arg_table["f"]) | stop("Couldn't open file")
-  }
-  else {
+  else
     intext := &input
-  }
   # make dictionary set
   dict    := make_dictionary(dict)
   # extract name for output files
@@ -203,7 +204,10 @@ procedure main(args)
   x_words := open(xw_name, "w") | stop("Error opening file")
   x_odd   := open(xo_name, "w") | stop("Error opening file")
 
-  # PARSE #-------------------------------------------------
+  # ANALYZE #-------------------------------------------------------------------
+  # depth first parse of tree
+  # root -> paragraphs -> sentences -> phrases -> words
+
   # data to collect
   num_P      := 0        # Paragraphs
   num_s      := 0        # sentences
@@ -216,8 +220,9 @@ procedure main(args)
   odd_chars  := 0.0      # chars in oddwords
   odd        := set()    # odd words
   word_table := table(0) # word_table
-  # depth first parse of tree
-  # root -> pragraphs -> sentences -> phrases -> words
+
+  # at each level, incriment that levels counter,
+  # count chars, get list of child nodes and do the same
   paragraphs := paragraphs_list(intext)
   num_P := *paragraphs
   # for each paragraph
@@ -238,38 +243,39 @@ procedure main(args)
         every l := 1 to *words do {
           num_w +:= 1
           w_num_c +:= *words[l]
-          # add to frequency list
+          # add to frequency table
           word_table[words[l]]+:= 1
-          # I don't think I can make this line less than 80 :(
           # look up word and lowercase counter part in dict
-          if not (member(dict, map(words[l], &ucase, &lcase)) | member(dict, words[l])) then
+          # if unfound, add it to the odd word list
+          if not (member(dict, map(words[l], &ucase, &lcase)) |
+                  member(dict, words[l])) then
             insert(odd, words[l])
         }
       }
     }
   }
-  P_num_c -:= 1
-
+  P_num_c -:= 1 # don't count <feff> char
   # sort words for frequency and oddwords lexically
   word_freq := alpha_sort(lreverse(sort(word_table, 2)))
   odd := sort(odd, 4)
+  # count oddword chars
   every i := 1 to *odd do
     odd_chars +:= *odd[i]
   if *odd > 0 then odd_chars := 1.0*odd_chars/*odd
 
-  # WRITE DATA TO FILES #-----------------------------------
+  # WRITE DATA TO FILES #------------------------------------------------------
   #
-  #   words    : word frequencies sorted by frequency and lexical order
+  #   words    : word list with frequencies, by frequency and lexical order
   #
-  #   oddwords : collect any word not present in a dictionary, lexical order
+  #   oddwords : list of any word not present in dictionary, by lexical order
   #
   #   stats    : # of paragraphs, avg length in sentences, words, chars
-  #              # of sentences, avg length in phrases words, chars
-  #              # of phrases, avg length in words, chars
-  #              # of words, avg length in chars
-  #              # of oddwords, avg length in chars
+  #              # of sentences,  avg length in phrases    words, chars
+  #              # of phrases,    avg length in words,     chars
+  #              # of words,      avg length in chars
+  #              # of oddwords,   avg length in chars
 
-  # STATS DATA #------------------------
+  # STATS DATA #--------------------------------------------
   fprintf(x_stats, "paragraphs   %d", num_P)
   fprintf(x_stats, "\taverage length    ")
   fprintf(x_stats, "%.2r sentences\t", 1.0*num_s/num_P)
@@ -291,11 +297,11 @@ procedure main(args)
   fprintf(x_stats, "\taverage length    ")
   fprintf(x_stats, "%.2r characters\n", odd_chars)
 
-  # ODD DATA #--------------------------
+  # ODD DATA #----------------------------------------------
   every i := 1 to *odd do
     write(x_odd, odd[i])
 
-  # WORD DATA #-------------------------
+  # WORD DATA #---------------------------------------------
   every i := 1 to *word_freq do
     write(x_words, word_freq[i])
 
